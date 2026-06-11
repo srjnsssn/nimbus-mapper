@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nimbus Mapper — Cloud Security Graph</title>
+<style>*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 16px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+}
+#header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo {
+  font-size: 18px;
+  color: #0ea5e9;
+}
+.logo-text {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0ea5e9;
+  letter-spacing: 1px;
+}
+.version {
+  font-size: 11px;
+  color: #64748b;
+  padding: 2px 6px;
+  border: 1px solid #334155;
+  border-radius: 4px;
+}
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat {
+  font-size: 11px;
+  color: #94a3b8;
+}
+#layout {
+  display: flex;
+  height: calc(100vh - 40px);
+}
+#sidebar {
+  width: 300px;
+  min-width: 300px;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+#cy-container {
+  flex: 1;
+  position: relative;
+}
+#cy {
+  width: 100%;
+  height: 100%;
+}
+#controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  z-index: 10;
+}
+#controls button {
+  width: 32px;
+  height: 32px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#controls button:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+#controls input, #controls select {
+  height: 32px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  color: #f8fafc;
+  font-size: 12px;
+  padding: 0 8px;
+  font-family: inherit;
+}
+#search-input {
+  width: 160px;
+}
+#controls select {
+  width: 100px;
+  cursor: pointer;
+}
+#controls input::placeholder {
+  color: #64748b;
+}
+#controls select option {
+  background: #1e293b;
+  color: #f8fafc;
+}
+#detail-panel {
+  flex: 1;
+  padding: 16px;
+}
+#detail-empty {
+  text-align: center;
+  padding: 60px 16px;
+  color: #64748b;
+}
+.detail-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 12px;
+}
+#detail-empty p {
+  font-size: 13px;
+  margin: 4px 0;
+}
+#detail-empty p.muted {
+  font-size: 11px;
+  color: #475569;
+  margin-top: 8px;
+}
+#detail-content h3 {
+  font-size: 15px;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+#detail-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-critical {
+  background: #450a0a;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+.badge-warning {
+  background: #451a03;
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+.badge-safe {
+  background: #052e16;
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+.detail-section {
+  margin-top: 16px;
+}
+.detail-section h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #1e293b;
+}
+.detail-label {
+  color: #64748b;
+  font-size: 12px;
+}
+.detail-value {
+  color: #f8fafc;
+  font-size: 12px;
+  text-align: right;
+  max-width: 180px;
+  word-break: break-word;
+}
+.detail-value.mono {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+}
+.finding-item {
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  border: 1px solid #334155;
+  background: #0f172a;
+}
+.finding-severity {
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+.finding-title {
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+.sev-critical { background: #450a0a; color: #ef4444; border: 1px solid #ef4444; }
+.sev-high { background: #451a03; color: #f59e0b; border: 1px solid #f59e0b; }
+.sev-medium { background: #0c1929; color: #0ea5e9; border: 1px solid #0ea5e9; }
+.sev-low { background: #1e293b; color: #94a3b8; border: 1px solid #475569; }
+#legend {
+  border-top: 1px solid #334155;
+  padding: 12px 16px;
+}
+#legend h4 {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.legend-item {
+  font-size: 11px;
+  color: #94a3b8;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-shape {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #475569;
+  background: #1e293b;
+}
+.legend-shape.rect { border-radius: 2px; }
+.legend-shape.circle { border-radius: 50%; }
+.legend-shape.diamond { transform: rotate(45deg); margin: 3px; }
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 2px;
+  background: transparent;
+}
+#tooltip {
+  position: fixed;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #e2e8f0;
+  pointer-events: none;
+  display: none;
+  z-index: 1000;
+  max-width: 260px;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+#tooltip strong {
+  color: #f8fafc;
+}
+:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+<div id="header">
+  <div id="header-left">
+    <span class="logo">☁</span>
+    <span class="logo-text">NIMBUS MAPPER</span>
+    <span class="version">v0.1-alpha</span>
+  </div>
+  <div id="header-right">
+    <span id="node-count" class="stat"></span>
+    <span id="finding-count" class="stat"></span>
+    <span id="provider-tags" class="stat"></span>
+  </div>
+</div>
+<div id="layout">
+  <div id="sidebar">
+    <div id="detail-panel">
+      <div id="detail-empty">
+        <span class="detail-icon">☁</span>
+        <p>Select a node to inspect</p>
+        <p class="muted">Click any resource in the graph<br>to view its security details</p>
+      </div>
+      <div id="detail-content" style="display:none">
+        <h3 id="detail-name"></h3>
+        <span id="detail-badge"></span>
+        <div class="detail-section">
+          <div class="detail-row"><span class="detail-label">Provider</span><span id="detail-provider" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">Region</span><span id="detail-region" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">Type</span><span id="detail-type" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">ID</span><span id="detail-id" class="detail-value mono"></span></div>
+          <div class="detail-row" id="detail-public-ip-row" style="display:none"><span class="detail-label">Public IP</span><span id="detail-public-ip" class="detail-value mono"></span></div>
+        </div>
+        <div class="detail-section">
+          <h4>Security Findings</h4>
+          <div id="detail-findings"></div>
+        </div>
+      </div>
+    </div>
+    <div id="legend">
+      <h4>Legend</h4>
+      <div class="legend-item"><span class="legend-shape rect"></span> Compute</div>
+      <div class="legend-item"><span class="legend-shape circle"></span> Database</div>
+      <div class="legend-item"><span class="legend-shape diamond"></span> Network</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#ef4444"></span> Critical</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#f59e0b"></span> Warning</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#22c55e"></span> Safe</div>
+    </div>
+  </div>
+  <div id="cy-container">
+    <div id="cy"></div>
+    <div id="controls">
+      <button id="btn-fit" title="Fit graph">⊞</button>
+      <button id="btn-reset" title="Reset zoom">⟲</button>
+      <input id="search-input" type="text" placeholder="Search resources…" spellcheck="false">
+      <select id="severity-filter">
+        <option value="all">All</option>
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="safe">Safe</option>
+      </select>
+    </div>
+  </div>
+</div>
+<script src="./cytoscape.min.js"></script>
+<script>const nimbusData = {"elements":{"nodes":[{"data":{"id":"cluster-aws-us-east-1","label":"AWS / us-east-1","provider":"aws","region":"us-east-1","type":"","exposureLevel":"","findingCount":0}},{"data":{"id":"vpc-0a1b2c3d4e5f00001","label":"nimbus-prod-vpc","provider":"aws","region":"us-east-1","type":"aws_vpc","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"igw-0a1b2c3d4e5f00001","label":"nimbus-prod-igw","provider":"aws","region":"us-east-1","type":"aws_internet_gateway","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"subnet-0a1b2c3d4e5f00001","label":"nimbus-prod-web-subnet","provider":"aws","region":"us-east-1","type":"aws_subnet","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"subnet-0a1b2c3d4e5f00002","label":"nimbus-prod-app-subnet","provider":"aws","region":"us-east-1","type":"aws_subnet","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"subnet-0a1b2c3d4e5f00003","label":"nimbus-prod-db-subnet","provider":"aws","region":"us-east-1","type":"aws_subnet","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"sg-0a1b2c3d4e5f00001","label":"sg-prod-web","provider":"aws","region":"us-east-1","type":"aws_security_group","exposureLevel":"Critical","findingCount":2,"findings":[{"severity":"CRITICAL","title":"Security Group allows SSH from 0.0.0.0/0"},{"severity":"HIGH","title":"Security Group allows HTTP from 0.0.0.0/0"}],"parent":"cluster-aws-us-east-1"}},{"data":{"id":"sg-0a1b2c3d4e5f00002","label":"sg-prod-app","provider":"aws","region":"us-east-1","type":"aws_security_group","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"sg-0a1b2c3d4e5f00003","label":"sg-prod-db","provider":"aws","region":"us-east-1","type":"aws_security_group","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","label":"prod-alb","provider":"aws","region":"us-east-1","type":"aws_alb","exposureLevel":"Warning","publicIp":"203.0.113.100","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"i-0a1b2c3d4e5f00001","label":"nimbus-web-01","provider":"aws","region":"us-east-1","type":"aws_ec2_instance","exposureLevel":"Critical","publicIp":"203.0.113.1","findingCount":1,"findings":[{"severity":"CRITICAL","title":"Security Group allows SSH from 0.0.0.0/0"}],"parent":"cluster-aws-us-east-1"}},{"data":{"id":"i-0a1b2c3d4e5f00002","label":"nimbus-web-02","provider":"aws","region":"us-east-1","type":"aws_ec2_instance","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"i-0a1b2c3d4e5f00003","label":"nimbus-app-01","provider":"aws","region":"us-east-1","type":"aws_ec2_instance","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"rds-prod-db-01","label":"nimbus-prod-db","provider":"aws","region":"us-east-1","type":"aws_rds_instance","exposureLevel":"Warning","findingCount":1,"findings":[{"severity":"MEDIUM","title":"RDS instance does not have deletion protection enabled"}],"parent":"cluster-aws-us-east-1"}},{"data":{"id":"arn:aws:s3:::nimbus-prod-assets","label":"nimbus-prod-assets","provider":"aws","region":"us-east-1","type":"aws_s3_bucket","exposureLevel":"Safe","findingCount":0,"parent":"cluster-aws-us-east-1"}},{"data":{"id":"arn:aws:s3:::nimbus-prod-backups","label":"nimbus-prod-backups","provider":"aws","region":"us-east-1","type":"aws_s3_bucket","exposureLevel":"Critical","findingCount":1,"findings":[{"severity":"CRITICAL","title":"S3 bucket 'nimbus-prod-backups' has public read access"}],"parent":"cluster-aws-us-east-1"}},{"data":{"id":"cluster-gcp-us-central1","label":"GCP / us-central1","provider":"gcp","region":"us-central1","type":"","exposureLevel":"","findingCount":0}},{"data":{"id":"projects/nimbus-gcp-prod/global/networks/gcp-prod-vpc","label":"gcp-prod-vpc","provider":"gcp","region":"us-central1","type":"gcp_vpc","exposureLevel":"Safe","findingCount":0,"parent":"cluster-gcp-us-central1"}},{"data":{"id":"projects/nimbus-gcp-prod/zones/us-central1-a/instances/gce-web-01","label":"gce-web-01","provider":"gcp","region":"us-central1","type":"gcp_compute_instance","exposureLevel":"Warning","publicIp":"198.51.100.1","findingCount":0,"parent":"cluster-gcp-us-central1"}},{"data":{"id":"projects/nimbus-gcp-prod/instances/gcp-prod-db","label":"gcp-prod-db","provider":"gcp","region":"us-central1","type":"gcp_cloud_sql","exposureLevel":"Safe","findingCount":0,"parent":"cluster-gcp-us-central1"}},{"data":{"id":"cluster-azure-eastus","label":"AZURE / eastus","provider":"azure","region":"eastus","type":"","exposureLevel":"","findingCount":0}},{"data":{"id":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Network/virtualNetworks/azure-prod-vnet","label":"azure-prod-vnet","provider":"azure","region":"eastus","type":"azure_vnet","exposureLevel":"Safe","findingCount":0,"parent":"cluster-azure-eastus"}},{"data":{"id":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Compute/virtualMachines/azure-web-01","label":"azure-web-01","provider":"azure","region":"eastus","type":"azure_virtual_machine","exposureLevel":"Safe","publicIp":"198.51.100.2","findingCount":0,"parent":"cluster-azure-eastus"}},{"data":{"id":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Sql/servers/azure-prod-sql/databases/orders-db","label":"azure-prod-sql","provider":"azure","region":"eastus","type":"azure_sql_database","exposureLevel":"Safe","findingCount":0,"parent":"cluster-azure-eastus"}},{"data":{"id":"cluster-global-","label":"GLOBAL / global","provider":"global","region":"global","type":"","exposureLevel":"","findingCount":0}},{"data":{"id":"internet","label":"Internet","provider":"global","region":"","type":"internet","exposureLevel":"Safe","findingCount":0,"parent":"cluster-global-"}}],"edges":[{"data":{"id":"e-0","source":"vpc-0a1b2c3d4e5f00001","target":"igw-0a1b2c3d4e5f00001","edgeType":"attached_to"}},{"data":{"id":"e-1","source":"internet","target":"igw-0a1b2c3d4e5f00001","edgeType":"network_ingress","label":"80-443"}},{"data":{"id":"e-2","source":"igw-0a1b2c3d4e5f00001","target":"subnet-0a1b2c3d4e5f00001","edgeType":"network_ingress","label":"0-65535"}},{"data":{"id":"e-3","source":"subnet-0a1b2c3d4e5f00001","target":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","edgeType":"network_ingress","label":"80-443"}},{"data":{"id":"e-4","source":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","target":"i-0a1b2c3d4e5f00001","edgeType":"network_ingress","label":"80"}},{"data":{"id":"e-5","source":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","target":"i-0a1b2c3d4e5f00001","edgeType":"network_ingress","label":"443"}},{"data":{"id":"e-6","source":"internet","target":"i-0a1b2c3d4e5f00001","edgeType":"network_ingress","label":"22"}},{"data":{"id":"e-7","source":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","target":"i-0a1b2c3d4e5f00002","edgeType":"network_ingress","label":"80"}},{"data":{"id":"e-8","source":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","target":"i-0a1b2c3d4e5f00002","edgeType":"network_ingress","label":"443"}},{"data":{"id":"e-9","source":"i-0a1b2c3d4e5f00001","target":"i-0a1b2c3d4e5f00003","edgeType":"network_ingress","label":"8080"}},{"data":{"id":"e-10","source":"i-0a1b2c3d4e5f00002","target":"i-0a1b2c3d4e5f00003","edgeType":"network_ingress","label":"8080"}},{"data":{"id":"e-11","source":"i-0a1b2c3d4e5f00003","target":"rds-prod-db-01","edgeType":"network_ingress","label":"3306"}},{"data":{"id":"e-12","source":"sg-0a1b2c3d4e5f00001","target":"i-0a1b2c3d4e5f00001","edgeType":"sg_attached"}},{"data":{"id":"e-13","source":"sg-0a1b2c3d4e5f00001","target":"i-0a1b2c3d4e5f00002","edgeType":"sg_attached"}},{"data":{"id":"e-14","source":"sg-0a1b2c3d4e5f00001","target":"arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/0a1b2c3d4e5f","edgeType":"sg_attached"}},{"data":{"id":"e-15","source":"sg-0a1b2c3d4e5f00002","target":"i-0a1b2c3d4e5f00003","edgeType":"sg_attached"}},{"data":{"id":"e-16","source":"sg-0a1b2c3d4e5f00003","target":"rds-prod-db-01","edgeType":"sg_attached"}},{"data":{"id":"e-17","source":"i-0a1b2c3d4e5f00001","target":"arn:aws:s3:::nimbus-prod-assets","edgeType":"iam_can_read"}},{"data":{"id":"e-18","source":"i-0a1b2c3d4e5f00001","target":"arn:aws:s3:::nimbus-prod-assets","edgeType":"iam_can_write"}},{"data":{"id":"e-19","source":"projects/nimbus-gcp-prod/global/networks/gcp-prod-vpc","target":"projects/nimbus-gcp-prod/zones/us-central1-a/instances/gce-web-01","edgeType":"network_ingress","label":"0-65535"}},{"data":{"id":"e-20","source":"internet","target":"projects/nimbus-gcp-prod/zones/us-central1-a/instances/gce-web-01","edgeType":"network_ingress","label":"443"}},{"data":{"id":"e-21","source":"projects/nimbus-gcp-prod/zones/us-central1-a/instances/gce-web-01","target":"projects/nimbus-gcp-prod/instances/gcp-prod-db","edgeType":"network_ingress","label":"5432"}},{"data":{"id":"e-22","source":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Network/virtualNetworks/azure-prod-vnet","target":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Compute/virtualMachines/azure-web-01","edgeType":"network_ingress","label":"0-65535"}},{"data":{"id":"e-23","source":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Compute/virtualMachines/azure-web-01","target":"/subscriptions/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/resourceGroups/nimbus-prod-rg/providers/Microsoft.Sql/servers/azure-prod-sql/databases/orders-db","edgeType":"network_ingress","label":"1433"}}]},"meta":{"version":"v0.1.0-alpha","generatedAt":"2026-06-11T22:24:29Z","totalNodes":22,"totalFindings":4,"providers":["azure","global","aws","gcp"]}};</script>
+<script>(function () {
+  'use strict';
+
+  var data = nimbusData;
+
+  function pickShape(type) {
+    if (!type) return 'ellipse';
+    var compute = ['aws_ec2_instance', 'gcp_compute_instance', 'azure_virtual_machine',
+      'aws_lambda_function', 'gcp_cloud_run_service'];
+    var database = ['aws_rds_instance', 'gcp_cloud_sql', 'azure_sql_database'];
+    var network = ['aws_alb', 'aws_internet_gateway', 'aws_vpc', 'aws_subnet',
+      'gcp_vpc', 'azure_vnet', 'internet'];
+    var storage = ['aws_s3_bucket', 'gcp_storage_bucket', 'azure_storage_account'];
+    if (database.indexOf(type) !== -1) return 'ellipse';
+    if (network.indexOf(type) !== -1) return 'diamond';
+    if (storage.indexOf(type) !== -1) return 'hexagon';
+    if (compute.indexOf(type) !== -1) return 'round-rectangle';
+    return 'round-rectangle';
+  }
+
+  function pickColor(level) {
+    if (level === 'Critical') return { bg: '#450a0a', border: '#ef4444' };
+    if (level === 'Warning')  return { bg: '#451a03', border: '#f59e0b' };
+    return { bg: '#0f172a', border: '#22c55e' };
+  }
+
+  var nodeCount = 0;
+  var clusterNodes = [];
+  var leafNodes = [];
+
+  data.elements.nodes.forEach(function (n) {
+    if (n.data.parent) {
+      leafNodes.push(n);
+    } else {
+      clusterNodes.push(n);
+    }
+    nodeCount++;
+  });
+
+  var NODE_STYLES = [
+    {
+      selector: ':parent',
+      style: {
+        'background-color': '#1e293b',
+        'border-color': '#334155',
+        'border-width': 1,
+        label: 'data(label)',
+        color: '#94a3b8',
+        'font-size': '10px',
+        'text-valign': 'top',
+        'text-halign': 'center',
+        'text-margin-y': 4,
+        padding: 24,
+        'font-weight': 600,
+      },
+    },
+    {
+      selector: 'node',
+      style: {
+        width: 32,
+        height: 32,
+        label: 'data(label)',
+        'font-size': '8px',
+        color: '#e2e8f0',
+        'text-valign': 'bottom',
+        'text-margin-y': 3,
+        'background-color': '#334155',
+        'border-width': 2,
+        'border-color': '#475569',
+        'font-family': 'system-ui, sans-serif',
+      },
+    },
+    {
+      selector: 'node[exposureLevel = "Critical"]',
+      style: {
+        'border-color': '#ef4444',
+        'border-width': 3,
+        'background-color': '#450a0a',
+        'shadow-blur': 12,
+        'shadow-color': '#ef4444',
+        'shadow-opacity': 0.4,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+      },
+    },
+    {
+      selector: 'node[exposureLevel = "Warning"]',
+      style: {
+        'border-color': '#f59e0b',
+        'border-width': 2,
+        'background-color': '#451a03',
+      },
+    },
+    {
+      selector: 'node[exposureLevel = "Safe"]',
+      style: {
+        'border-color': '#22c55e',
+        'border-width': 1,
+        'background-color': '#052e16',
+      },
+    },
+    {
+      selector: 'node[type = "internet"]',
+      style: {
+        width: 48,
+        height: 48,
+        'background-color': '#0ea5e9',
+        'border-color': '#0284c7',
+        'border-width': 2,
+        'font-size': '10px',
+        color: '#f8fafc',
+        'font-weight': 700,
+      },
+    },
+    {
+      selector: 'edge',
+      style: {
+        width: 1.5,
+        'line-color': '#475569',
+        'target-arrow-color': '#475569',
+        'target-arrow-shape': 'triangle',
+        'curve-style': 'bezier',
+        label: 'data(label)',
+        'font-size': '7px',
+        color: '#64748b',
+        'text-background-color': '#0f172a',
+        'text-background-opacity': 0.8,
+        'text-background-padding': 2,
+      },
+    },
+    {
+      selector: 'edge[edgeType = "network_ingress"]',
+      style: {
+        'line-color': '#ef4444',
+        'target-arrow-color': '#ef4444',
+        width: 2,
+      },
+    },
+    {
+      selector: 'edge[edgeType = "sg_attached"]',
+      style: {
+        'line-color': '#a78bfa',
+        'target-arrow-color': '#a78bfa',
+        width: 1.5,
+        'line-style': 'dashed',
+      },
+    },
+    {
+      selector: 'edge[edgeType ^= "iam_"]',
+      style: {
+        'line-color': '#a78bfa',
+        'target-arrow-color': '#a78bfa',
+        'line-style': 'dotted',
+        width: 1.5,
+      },
+    },
+  ];
+
+  function pickLayout(count) {
+    if (count > 200) {
+      return {
+        name: 'concentric',
+        animate: false,
+        concentric: function (n) {
+          if (n.data('exposureLevel') === 'Critical') return 3;
+          if (n.data('exposureLevel') === 'Warning') return 2;
+          return 1;
+        },
+        levelWidth: function () { return 2; },
+        padding: 40,
+      };
+    }
+    if (count > 50) {
+      return { name: 'cose', animate: false, randomize: false, componentSpacing: 60, nodeRepulsion: 8000 };
+    }
+    return {
+      name: 'breadthfirst',
+      animate: true,
+      animationDuration: 400,
+      spacingFactor: 1.4,
+      padding: 30,
+      directed: true,
+    };
+  }
+
+  var cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: data.elements,
+    style: NODE_STYLES,
+    layout: pickLayout(data.meta.totalNodes),
+    minZoom: 0.05,
+    maxZoom: 4,
+    wheelSensitivity: 0.3,
+  });
+
+  // ── Tooltip ──────────────────────────────────────────────────────────
+
+  var tooltip = document.getElementById('tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  cy.on('mouseover', 'node:childless', function (evt) {
+    var n = evt.target;
+    var d = n.data();
+    var html = '<strong>' + escapeHtml(d.label || d.id) + '</strong><br>';
+    html += 'Type: ' + (d.type || 'unknown') + '<br>';
+    html += 'Provider: ' + (d.provider || '-') + ' / ' + (d.region || '-') + '<br>';
+    html += 'Exposure: ' + (d.exposureLevel || 'Safe') + '<br>';
+    if (d.publicIp) html += 'Public IP: ' + escapeHtml(d.publicIp) + '<br>';
+    html += 'Findings: ' + (d.findingCount || 0);
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+  });
+
+  cy.on('mousemove', 'node:childless', function (evt) {
+    var pos = evt.renderedPosition || evt.position;
+    tooltip.style.left = (pos.x + 16) + 'px';
+    tooltip.style.top = (pos.y + 16) + 'px';
+  });
+
+  cy.on('mouseout', 'node', function () {
+    tooltip.style.display = 'none';
+  });
+
+  // ── Click to select ──────────────────────────────────────────────────
+
+  cy.on('tap', 'node:childless', function (evt) {
+    var n = evt.target;
+    var d = n.data();
+    showDetail(d);
+    cy.$(':selected').unselect();
+    n.select();
+  });
+
+  cy.on('tap', function (evt) {
+    if (evt.target === cy) {
+      cy.$(':selected').unselect();
+      hideDetail();
+    }
+  });
+
+  // ── Detail Panel ─────────────────────────────────────────────────────
+
+  function showDetail(d) {
+    var emptyEl = document.getElementById('detail-empty');
+    var contentEl = document.getElementById('detail-content');
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'block';
+
+    setText('detail-name', d.label || d.id || 'Unknown');
+    setText('detail-provider', d.provider || '-');
+    setText('detail-region', d.region || '-');
+    setText('detail-type', d.type || '-');
+    setText('detail-id', d.id || '-');
+
+    var badge = document.getElementById('detail-badge');
+    if (badge) {
+      var level = d.exposureLevel || 'Safe';
+      badge.textContent = level;
+      badge.className = '';
+      if (level === 'Critical') badge.classList.add('badge-critical');
+      else if (level === 'Warning') badge.classList.add('badge-warning');
+      else badge.classList.add('badge-safe');
+    }
+
+    var pubIpRow = document.getElementById('detail-public-ip-row');
+    if (pubIpRow) {
+      if (d.publicIp) {
+        setText('detail-public-ip', d.publicIp);
+        pubIpRow.style.display = 'flex';
+      } else {
+        pubIpRow.style.display = 'none';
+      }
+    }
+
+    var findingsEl = document.getElementById('detail-findings');
+    if (findingsEl) {
+      findingsEl.innerHTML = '';
+      if (d.findings && d.findings.length > 0) {
+        d.findings.sort(function (a, b) {
+          var order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4 };
+          return (order[a.severity] || 99) - (order[b.severity] || 99);
+        });
+        d.findings.forEach(function (f) {
+          var item = document.createElement('div');
+          item.className = 'finding-item';
+          var sev = document.createElement('span');
+          sev.className = 'finding-severity sev-' + f.severity.toLowerCase();
+          sev.textContent = f.severity;
+          item.appendChild(sev);
+          var title = document.createElement('div');
+          title.className = 'finding-title';
+          title.textContent = f.title;
+          item.appendChild(title);
+          findingsEl.appendChild(item);
+        });
+      } else {
+        findingsEl.innerHTML = '<div class="finding-item" style="color:#64748b">No security findings</div>';
+      }
+    }
+  }
+
+  function hideDetail() {
+    var emptyEl = document.getElementById('detail-empty');
+    var contentEl = document.getElementById('detail-content');
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (contentEl) contentEl.style.display = 'none';
+  }
+
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ── Search ───────────────────────────────────────────────────────────
+
+  var searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      var q = this.value.toLowerCase().trim();
+      cy.nodes(':childless').forEach(function (n) {
+        var d = n.data();
+        var match = !q ||
+          (d.label && d.label.toLowerCase().indexOf(q) !== -1) ||
+          (d.type && d.type.toLowerCase().indexOf(q) !== -1) ||
+          (d.id && d.id.toLowerCase().indexOf(q) !== -1) ||
+          (d.provider && d.provider.toLowerCase().indexOf(q) !== -1);
+        n.style('display', match ? 'element' : 'none');
+      });
+    });
+  }
+
+  // ── Severity Filter ──────────────────────────────────────────────────
+
+  var sevFilter = document.getElementById('severity-filter');
+  if (sevFilter) {
+    sevFilter.addEventListener('change', function () {
+      var val = this.value;
+      cy.nodes(':childless').forEach(function (n) {
+        var level = n.data('exposureLevel') || 'Safe';
+        var show = true;
+        if (val === 'critical') show = level === 'Critical';
+        else if (val === 'warning') show = level === 'Critical' || level === 'Warning';
+        else if (val === 'safe') show = level === 'Safe';
+        n.style('display', show ? 'element' : 'none');
+      });
+    });
+  }
+
+  // ── Zoom Controls ────────────────────────────────────────────────────
+
+  var fitBtn = document.getElementById('btn-fit');
+  if (fitBtn) fitBtn.addEventListener('click', function () { cy.fit(); });
+
+  var resetBtn = document.getElementById('btn-reset');
+  if (resetBtn) resetBtn.addEventListener('click', function () {
+    cy.zoom(1);
+    cy.center();
+  });
+
+  // ── Keyboard Navigation ──────────────────────────────────────────────
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      cy.$(':selected').unselect();
+      hideDetail();
+    }
+    if (e.key === 'f' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (searchInput) searchInput.focus();
+    }
+  });
+
+  // ── Stats Header ─────────────────────────────────────────────────────
+
+  function updateStats() {
+    var nodeCountEl = document.getElementById('node-count');
+    if (nodeCountEl) nodeCountEl.textContent = 'Nodes: ' + (data.meta.totalNodes || 0);
+
+    var findingCountEl = document.getElementById('finding-count');
+    if (findingCountEl) findingCountEl.textContent = 'Findings: ' + (data.meta.totalFindings || 0);
+
+    var provEl = document.getElementById('provider-tags');
+    if (provEl && data.meta.providers) {
+      provEl.textContent = data.meta.providers.join(' · ');
+    }
+  }
+  updateStats();
+
+  // ── Handle resize ────────────────────────────────────────────────────
+
+  window.addEventListener('resize', function () {
+    cy.resize();
+  });
+
+})();
+</script>
+</body>
+</html>

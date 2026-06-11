@@ -1,0 +1,34 @@
+# Binaries
+/nimbus
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Environment variables & Secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.rsa
+*.bck
+secrets.json
+credentials.json
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nimbus Mapper — Cloud Security Graph</title>
+<style>{{.StyleCSS}}</style>
+</head>
+<body>
+<div id="header">
+  <div id="header-left">
+    <span class="logo">☁</span>
+    <span class="logo-text">NIMBUS MAPPER</span>
+    <span class="version">v0.1-alpha</span>
+  </div>
+  <div id="header-right">
+    <span id="node-count" class="stat"></span>
+    <span id="finding-count" class="stat"></span>
+    <span id="provider-tags" class="stat"></span>
+  </div>
+</div>
+<div id="layout">
+  <div id="sidebar">
+    <div id="detail-panel">
+      <div id="detail-empty">
+        <span class="detail-icon">☁</span>
+        <p>Select a node to inspect</p>
+        <p class="muted">Click any resource in the graph<br>to view its security details</p>
+      </div>
+      <div id="detail-content" style="display:none">
+        <h3 id="detail-name"></h3>
+        <span id="detail-badge"></span>
+        <div class="detail-section">
+          <div class="detail-row"><span class="detail-label">Provider</span><span id="detail-provider" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">Region</span><span id="detail-region" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">Type</span><span id="detail-type" class="detail-value"></span></div>
+          <div class="detail-row"><span class="detail-label">ID</span><span id="detail-id" class="detail-value mono"></span></div>
+          <div class="detail-row" id="detail-public-ip-row" style="display:none"><span class="detail-label">Public IP</span><span id="detail-public-ip" class="detail-value mono"></span></div>
+        </div>
+        <div class="detail-section">
+          <h4>Security Findings</h4>
+          <div id="detail-findings"></div>
+        </div>
+      </div>
+    </div>
+    <div id="legend">
+      <h4>Legend</h4>
+      <div class="legend-item"><span class="legend-shape rect"></span> Compute</div>
+      <div class="legend-item"><span class="legend-shape circle"></span> Database</div>
+      <div class="legend-item"><span class="legend-shape diamond"></span> Network</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#ef4444"></span> Critical</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#f59e0b"></span> Warning</div>
+      <div class="legend-item"><span class="legend-dot" style="border-color:#22c55e"></span> Safe</div>
+    </div>
+  </div>
+  <div id="cy-container">
+    <div id="cy"></div>
+    <div id="controls">
+      <button id="btn-fit" title="Fit graph">⊞</button>
+      <button id="btn-reset" title="Reset zoom">⟲</button>
+      <input id="search-input" type="text" placeholder="Search resources…" spellcheck="false">
+      <select id="severity-filter">
+        <option value="all">All</option>
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="safe">Safe</option>
+      </select>
+    </div>
+  </div>
+</div>
+<script src="./cytoscape.min.js"></script>
+<script>const nimbusData = {{.JSONPayload}};</script>
+<script>{{.AppJS}}</script>
+</body>
+</html>
